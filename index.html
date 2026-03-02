@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raven's Digital Diary</title>
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --accent: #a29bfe;
+            --bg: #f0f2f5;
+            --text: #2d3436;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        /* Personalized Header */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--bg);
+            padding-bottom: 20px;
+        }
+
+        h1 { 
+            color: var(--primary); 
+            margin: 0;
+            font-size: 2.2rem;
+            letter-spacing: -1px;
+        }
+
+        .author-tag {
+            font-size: 0.9rem;
+            color: var(--accent);
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 15px;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            resize: none;
+            font-size: 1rem;
+            margin-bottom: 10px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        textarea:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(108, 92, 231, 0.1); }
+
+        .btn-save {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn-save:hover { transform: translateY(-2px); background: #5b4cc4; }
+
+        .entries-container { margin-top: 40px; }
+        
+        .entry {
+            background: #ffffff;
+            padding: 20px;
+            border: 1px solid #eee;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            position: relative;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .entry-date {
+            font-size: 0.8rem;
+            color: #b2bec3;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #fab1a0;
+            color: #d63031;
+            border: none;
+            padding: 5px 10px;
+            font-size: 0.7rem;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.8rem;
+            color: #636e72;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <span class="author-tag">Personal Space</span>
+            <h1>Raven's Digital Diary</h1>
+        </div>
+        
+        <textarea id="diaryInput" placeholder="What's happening today, Raven?"></textarea>
+        <button class="btn-save" onclick="addEntry()">Lock in Entry</button>
+
+        <div class="entries-container" id="entriesList"></div>
+
+        <div class="footer">
+            Designed for Raven | <span id="year"></span>
+        </div>
+    </div>
+
+    <script>
+        const diaryInput = document.getElementById('diaryInput');
+        const entriesList = document.getElementById('entriesList');
+        document.getElementById('year').innerText = new Date().getFullYear();
+
+        window.onload = () => {
+            const savedEntries = JSON.parse(localStorage.getItem('raven_diary')) || [];
+            savedEntries.forEach(entry => displayEntry(entry));
+        };
+
+        function addEntry() {
+            const text = diaryInput.value.trim();
+            if (text === "") return alert("Write something first, Raven!");
+
+            const entry = {
+                id: Date.now(),
+                text: text,
+                date: new Date().toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                })
+            };
+
+            const savedEntries = JSON.parse(localStorage.getItem('raven_diary')) || [];
+            savedEntries.unshift(entry);
+            localStorage.setItem('raven_diary', JSON.stringify(savedEntries));
+
+            displayEntry(entry, true);
+            diaryInput.value = "";
+        }
+
+        function displayEntry(entry, isNew = false) {
+            const entryDiv = document.createElement('div');
+            entryDiv.className = 'entry';
+            entryDiv.innerHTML = `
+                <span class="entry-date">${entry.date}</span>
+                <div class="entry-text">${entry.text}</div>
+                <button class="delete-btn" onclick="deleteEntry(${entry.id})">Remove</button>
+            `;
+            
+            if (isNew) {
+                entriesList.prepend(entryDiv);
+            } else {
+                entriesList.appendChild(entryDiv);
+            }
+        }
+
+        function deleteEntry(id) {
+            if(confirm("Are you sure you want to delete this memory?")) {
+                let savedEntries = JSON.parse(localStorage.getItem('raven_diary'));
+                savedEntries = savedEntries.filter(entry => entry.id !== id);
+                localStorage.setItem('raven_diary', JSON.stringify(savedEntries));
+                location.reload();
+            }
+        }
+    </script>
+
+</body>
+</html>
